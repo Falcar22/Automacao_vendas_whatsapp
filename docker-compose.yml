@@ -1,0 +1,75 @@
+services:
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=evolution_user
+      - POSTGRES_PASSWORD=AQUI_SUA_SENHA_PODTGRES
+      - POSTGRES_DB=evolution_db
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    volumes:
+      - ./redis_data:/data
+
+  evolution_api:
+    image: evoapicloud/evolution-api:v2.3.7
+    container_name: evolution_api
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_ENABLED=true
+      - DATABASE_PROVIDER=postgresql
+      - DATABASE_CONNECTION_URI=postgresql://evolution_user:SUA_SENHA_POSTGRES:5432/evolution_db?sslmode=disable
+      - DATABASE_CONNECTION_CLIENT_NAME=evolution_api
+      - DATABASE_SAVE_DATA_INSTANCE=true
+      - DATABASE_SAVE_DATA_NEW_MESSAGE=true
+      - DATABASE_SAVE_MESSAGE_UPDATE=true
+      - DATABASE_SAVE_DATA_CONTACTS=true
+      - DATABASE_SAVE_DATA_CHATS=true
+      - DATABASE_SAVE_DATA_LABELS=true
+      - DATABASE_SAVE_DATA_HISTORIC=true
+      - CACHE_REDIS_ENABLED=true
+      - CACHE_REDIS_URI=redis://redis:6379
+      - CACHE_REDIS_PREFIX=EVO
+      - CONFIG_SESSION_PHONE_VERSION=2.3000.1036700175
+      - CONFIG_SESSION_PHONE_NAME=Chrome
+      - AUTHENTICATION_API_KEY=CRIE_SUA_SENHA
+      - AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES=true
+    depends_on:
+      - db
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=n8n
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=AQUI SUA CREDENCIAL NO N8N
+      # VARIÁVEIS DE LIMPEZA (Agora no lugar certo!)
+      - EXECUTIONS_DATA_PRUNE=true
+      - EXECUTIONS_DATA_MAX_AGE=24
+      - EXECUTIONS_DATA_PRUNE_MAX_COUNT=500
+      - EXECUTIONS_DATA_STORAGE_LOCATION=database
+      - DB_SQLITE_VACUUM_ON_STARTUP=true
+    volumes:
+      - ./n8n_data:/home/node/.n8n
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
+  redis_data:
+  n8n_data:

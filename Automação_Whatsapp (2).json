@@ -1,0 +1,723 @@
+{
+  "name": "Automação_Whatsapp",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "zap",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -752,
+        192
+      ],
+      "id": "101f2118-c803-40fb-a5b2-c40e9ad8a922",
+      "name": "Webhook",
+      "webhookId": "0f5ec4c7-9cdb-4d7c-b42e-e65aff2f59a3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "84845f24-acda-4b9a-a033-57a906c535b0",
+              "leftValue": "={{ $json.event }}",
+              "rightValue": "messages.upsert",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        256,
+        192
+      ],
+      "id": "8831c914-f1e5-4788-903a-f01d5fc27000",
+      "name": "API"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $node['Webhook'].json.body.data.message.conversation || $node['Webhook'].json.body.data.message.extendedTextMessage?.text || \"O usuário mandou uma mensagem.\" }}",
+        "options": {
+          "systemMessage": "=# Perfil: Rosa (Assistente Virtual Rosas de Jardim Delivery)\n# Comportamento: Profissional, educada, natural. Sem gírias. Use emojis com moderação.\n\n# REGRAS DE OURO (CRÍTICO):\n1. Nunca dê o pedido como \"Confirmado\" ou \"Em preparo\" antes de ter: Nome, Endereço e Forma de Pagamento.\n2. Se o pagamento for PIX, o preparo SOB HIPÓTESE ALGUMA começa sem o comprovante.\n3. Não peça Cidade ou CEP. Peça apenas: Rua, Número, Bairro,(opcional) Ponto de Referência.\nSe o cliente fizer o pedido diretamente,se ele perguntar o total ou quanto deu,pergunte a forma de pagamento e siga o fluxo até o termino do atendimento.\n# HORÁRIO DE FUNCIONAMENTO (CONSULTAR {{ $now }}):\n- Seg a Sáb: 10:00-15:00 e 18:00-22:00\n- Dom/Feriados: 11:00-14:00\nSe estiver fora do horário, informe educadamente que estamos fechados e retorne no próximo horário.\n# PROTOCOLO DE RESPOSTAS CURTAS (CRÍTICO)\n- Se a sua última pergunta foi \"Posso enviar para a cozinha?\" e o cliente responder apenas \"Sim\", \"Ok\", \"Pode\" ou mandar um emoji (👍), você deve OBRIGATORIAMENTE considerar como CONFIRMADO.\n- Nunca repita a pergunta se o cliente deu uma resposta positiva curta. \n- Assim que receber o \"Sim\" após o resumo, passe imediatamente para a mensagem: \"Pedido confirmado! Já enviei para a cozinha e em breve estará pronto. 🌹\"\n# LOGICA DE CONFIRMAÇÃO (PRIORIDADE ALTA)\n- Interprete \"Sim\", \"Pode ser\", \"Ok\", \"Confirmado\" ou um emoji de polegar (👍) como uma AFIRMAÇÃO POSITIVA ao último passo perguntado.\n- Se você acabou de enviar o Resumo do Pedido, qualquer uma dessas respostas CURTAS significa: \"Pode enviar para a cozinha\". \n- Não peça confirmação da confirmação. Se o cliente disse \"Sim\", avance para a finalização imediatamente.\n# USO DO CARDÁPIO (FONTE ÚNICA):\n{{ $('Organiza pedidos').item.json.cardapio }}\n- Nunca invente pratos ou preços. \n- Se o cliente pedir algo fora do cardápio (como sobremesas): \"Infelizmente não trabalhamos com sobremesas no momento. Deseja algo do nosso cardápio de refeições?\"\n# FORMATAÇÃO DO CARDÁPIO (PADRÃO ÚNICO):\n\nSempre que o cliente pedir o cardápio, siga exatamente este padrão para TODOS os itens:\n1. FRASE DE ABERTURA:\n\"Bem-vindo ao Rosas de Jardim Delivery. Nada melhor que uma comida caseira feita com carinho para o seu almoço ou janta!\"\n\n2. LISTAGEM DE ITENS (PRINCIPAIS E PROMOÇÕES):\nApresente apenas os pratos e tamanhos escolhidos pelo cliente.\n(Dica: Se o prato for da promoção de R$ 15,00, preencha o valor de R$ 15,00 no tamanho Médio e informe os outros tamanhos conforme o cardápio padrão, ou apenas o valor fixo se for prato único).\n\n3. SEPARAÇÃO:\nUse uma linha em branco entre cada prato para não virar um bloco de texto cansativo.\n# FLUXO DE ATENDIMENTO (SIGA RIGOROSAMENTE UMA PERGUNTA POR VEZ):\n\n1. **SAUDAÇÃO E PEDIDO:** Apresente o cardápio (se solicitado) e anote os pratos/tamanhos.\n2. **MAIS ITENS?** Pergunte se deseja adicionar algo mais.\n3. **APÓS PERGUNTAR SE O CLIENTE QUER ALGO A MAIS,SE ELE DISSER \"SIM\" CONTINUE COLETANDO OS ITENS,CASO DIGA \"NÃO\"AGRADEÇA E CONTINUE O ATENDIMENTO,NÃO ENVIE CARDAPIO NOVAMENTE E DIGA PARA PROXIMA INSTRUÇÃO.\n4. **DADOS DE ENTREGA:** Peça o Nome do cliente e o Endereço (Rua, Número, Bairro e Ponto de Referência).\n5. **FORMA DE PAGAMENTO:** Pergunte: \"Como prefere pagar: Dinheiro ou PIX?\"\n   - **Se Dinheiro:** Pergunte se precisa de troco.\n# DADOS FINANCEIROS (PROCESSADOS PELO SISTEMA):\n- Item: {{ $json.resumo_financeiro?.item || \"Nenhum\" }}\n- Preço: R$ {{ $json.resumo_financeiro?.preco || 0 }}\n- Pago: R$ {{ $json.resumo_financeiro?.pago || 0 }}\n- Troco: R$ {{ $json.resumo_financeiro?.troco || 0 }}\n\nInstrução: Se os valores acima estiverem preenchidos, confirme com o cliente. Caso contrário, siga o atendimento normal.\n\nAtenção: Use os valores acima para confirmar com o cliente. Se estiverem zerados, continue o atendimento pedindo os dados que faltam (Nome, Endereço e Pagamento).\nAtenção: Se os valores acima forem \"0\" ou \"Nenhum\", significa que o cliente ainda não fechou o pedido ou não informou o valor para pagamento. Continue o atendimento normalmente seguindo o fluxo de venda.\n\nInstrução: Confirme os valores acima com o cliente de forma educada e finalize o atendimento.\n\n   - **Se PIX:** Informe a chave (Chave: falucar22@gmail.com | Nubank | Fabio Luiz) e diga: \"Para validarmos seu pedido, por favor, envie o comprovante por aqui. O preparo só inicia após o recebimento do print.\"\n5. **RESUMO E CONFIRMAÇÃO FINAL:** Após ter TODAS as informações acima, envie o resumo:\n   ---\n   📋 *RESUMO DO PEDIDO*\n   - Itens: [Listar pratos e tamanhos]\n   - Total: R$ [Valor]\n   - Entrega: [Rua, Número, Bairro - Ref]\n   - Pagamento: [Forma escolhida]\n   ---\n   \"Confirma os dados para enviarmos à cozinha?\"\n\n6. **FINALIZAÇÃO:** Após o \"Sim\" do cliente (e comprovante se for PIX):\n   - Tempo estimado: 50 minutos.\n   - \"Seu pedido foi enviado para a cozinha! Avisaremos assim que sair para entrega. 🌹\"\n\n# RESTRIÇÕES:\n- Proibido enviar blocos de texto gigantes.\n- Proibido pedir confirmação de pedido antes de saber o endereço e pagamento.\n- Se o cliente perguntar \"Já está vindo?\", verifique se ele enviou o comprovante (caso tenha escolhido PIX).\n# REGRAS DE DECISÃO (SIM/NÃO):\n- Se o cliente responder \"Sim\", \"Pode\", \"Ok\" ou \"Confirmado\" logo após você apresentar o \"RESUMO DO PEDIDO\", entenda como a confirmação final.\n- Se o cliente responder \"Sim\" logo após a sua saudação inicial, entenda que ele quer ver o cardápio.\n- Jamais volte ao início da conversa se o cliente estiver confirmando um pedido que já tem itens e valores.\n\n# PASSO 5: RESUMO E CONFIRMAÇÃO (CRÍTICO)\n- Quando tiver todos os dados, envie o quadro 📋 RESUMO DO PEDIDO.\n- IMEDIATAMENTE após o resumo, informe que o pedido foi encaminhado para cozinha e assim que estiver pronto avisaremos.\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1360,
+        176
+      ],
+      "id": "c5272d93-a286-4353-891a-786d0be83280",
+      "name": "AI Agent",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6a380a83-edf6-44eb-aeb8-39633fe1e2d0",
+              "name": "event",
+              "value": "={{ $('Webhook').item.json.body.event }}",
+              "type": "string"
+            },
+            {
+              "id": "003aa242-6358-44f0-9795-beead7ff6875",
+              "name": "session",
+              "value": "={{ $json.body.instance }}",
+              "type": "string"
+            },
+            {
+              "id": "11b9475c-6943-4ec5-8c3a-eb9c139f474a",
+              "name": "to",
+              "value": "={{ $json.body.data.key.remoteJid }}",
+              "type": "string"
+            },
+            {
+              "id": "0129861a-338c-49c8-be38-cbe8c482f884",
+              "name": "fromMe",
+              "value": "={{ $('Webhook').item.json.body.data.key.fromMe }}",
+              "type": "boolean"
+            },
+            {
+              "id": "aec866c5-182d-4223-b0b9-b2e014d5b6fc",
+              "name": "source",
+              "value": "={{ $('Webhook').item.json.body.data.source }}",
+              "type": "string"
+            },
+            {
+              "id": "a52f4383-ec94-4a69-bf12-b000245e458e",
+              "name": "hasMedia",
+              "value": "={{ $json.body.data.messageType }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": "=",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -16,
+        192
+      ],
+      "id": "f231a9fa-1379-46e8-8c30-dc2e9e2fd0ad",
+      "name": "DADOS"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        432
+      ],
+      "id": "8c0bbd43-0070-42c0-9b48-7c0e0e54c9e7",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "hvjsabqk8V4ISyLz",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "mistral-tiny-latest",
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        1664
+      ],
+      "id": "94b8505d-21cc-4ada-a44e-12f943394f91",
+      "name": "Mistral Cloud Chat Model",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "HY509jlNwgxv7xF1",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {
+          "includeBinaries": false
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        512,
+        176
+      ],
+      "id": "e4de089b-8e0e-452d-93ad-2faa2d69f2b0",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "1l2rld3nkHVyp2EC3g45RHjNvP3vNv1f8dP-FssBoT8w",
+          "mode": "list",
+          "cachedResultName": "Cardapio Rosas de Jardim Delivery",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1l2rld3nkHVyp2EC3g45RHjNvP3vNv1f8dP-FssBoT8w/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Página1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1l2rld3nkHVyp2EC3g45RHjNvP3vNv1f8dP-FssBoT8w/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        736,
+        176
+      ],
+      "id": "7fc2ff20-cce9-4a8d-ba9b-aaa67e38b78f",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleApi": {
+          "id": "5NUMEUTsk6xfEIrF",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8ca73621-d371-48e7-956e-0c5a689dcb5b",
+              "leftValue": "={{ $json.body?.data?.key?.remoteJid?.endsWith('@s.whatsapp.net') || $json.body?.data?.key?.remoteJid?.endsWith('@lid') }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "0e10ca2f-be50-4fde-8d68-972157dc2495",
+              "leftValue": "body.data.key.remoteJid",
+              "rightValue": "@s.whatsapp.net",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "71f2d130-03b5-46c1-8d82-a4d4a8a65191",
+              "leftValue": "body.data.key.remoteJid",
+              "rightValue": "=@lid",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "2975d08d-3f8c-4b0b-9955-fa00bf833034",
+              "leftValue": "={{ $json.body?.data?.key?.fromMe }}",
+              "rightValue": "=false",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -512,
+        192
+      ],
+      "id": "aaeb3a5a-4931-4040-8b0c-4b1dd644595e",
+      "name": "filtra GRUPOS"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5fb20715-ed65-4bd0-a5a6-a136e707e714",
+              "leftValue": "={{ $json.body.data.messageType }}",
+              "rightValue": "audioMessage",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -240,
+        176
+      ],
+      "id": "dd075fec-6965-4839-aa14-1c1b4e293012",
+      "name": "filtro de Audio"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://34.74.183.91:8080/message/sendText/Rosas ",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "RosasDeJardim123"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": \"{{ $json.body.data.key.remoteJid }}\",\n  \"options\": {\n    \"delay\": 2000,\n    \"presence\": \"composing\",\n    \"linkPreview\": false\n  },\n  \"text\": \"Olá! No momento eu ainda não consigo ouvir áudios. 🌹 Poderia escrever sua mensagem para que eu consiga te ajudar?\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "0bffde00-95e8-47eb-bd81-d538b53ce903",
+      "name": "Mensagem de audio",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://34.74.183.91:8080/message/sendText/Rosas ",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "RosasDeJardim123"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": \"{{ ($('Webhook').item.json.body.data.key.remoteJidAlt ?? $('Webhook').item.json.body.data.key.remoteJid).split('@')[0] }}\",\n  \"options\": {\n    \"delay\": 3500,\n    \"presence\": \"composing\",\n    \"linkPreview\": false\n  },\n  \"text\": {{ JSON.stringify($json.output || $node[\"AI Agent\"].json[\"output\"] || \"Ops, tive um probleminha aqui. Pode repetir?\") }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2256,
+        160
+      ],
+      "id": "fb392b91-e59d-4c79-ab16-a2144a682559",
+      "name": "Envio de mensagem"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        624,
+        1840
+      ],
+      "id": "33b98a1a-3825-4390-9cdd-5be43446b203",
+      "name": "Google Gemini Chat Model",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "obfNqc83bsLJao1k",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.body.data.key.remoteJid }}",
+        "tableName": "n8n_chat_histories_v2"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        1456,
+        368
+      ],
+      "id": "e37902db-f618-4caf-aa0a-3d4a515864ac",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "SPJYd6wlVbXoJLf2",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1872,
+        160
+      ],
+      "id": "71691961-c2aa-43ef-880a-0dc4518ac352",
+      "name": "aguarde 2 sec.",
+      "webhookId": "50a09ef7-24db-4dc7-a3c1-fbd3351b7b83"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "46357387-4c7a-486c-9386-b3fe3db7fa43",
+              "leftValue": "={{ $node[\"Webhook\"].json.body.data.key.remoteJid }}",
+              "rightValue": "@s.whatsapp.net",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "672d4696-3a12-42bb-95e2-5c30930e8921",
+              "leftValue": "={{ $node[\"Webhook\"].json.body.data.key.remoteJid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1680,
+        176
+      ],
+      "id": "258dfd81-c07a-4be3-a4f8-dc6e3995ff23",
+      "name": "condicional numero real"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "de86f1a9-2640-473c-9367-5d4dff9d9f58",
+              "name": "={{ $('Webhook').item.json.body.data.key.remoteJid.split('@')[0] }}",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2080,
+        160
+      ],
+      "id": "0edd2245-7a2f-4aa6-a26f-43094f34cc14",
+      "name": "limpa numero"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Função para buscar dados com segurança e evitar o erro de \"Referenced node\"\nfunction getSafeData(nodeName) {\n  try {\n    return $(nodeName).item.json;\n  } catch (e) {\n    return {};\n  }\n}\n\n// 1. Pega os dados dos nós (Certifique-se que os nomes estão 100% iguais no fluxo)\nconst webhookData = getSafeData('Webhook');\nconst sheetsData = getSafeData('Google Sheets');\n\n// 2. Extrai a mensagem e o valor pago\nconst mensagem = webhookData?.body?.data?.message?.conversation || \"\";\nconst valorPagoMatch = mensagem.match(/\\d+([.,]\\d+)?/);\nconst valorPago = valorPagoMatch ? parseFloat(valorPagoMatch[0].replace(',', '.')) : 0;\n\n// 3. Extrai o preço do item (Trata se vier como string ou número)\nconst precoRaw = sheetsData[\"Preço\"] || sheetsData[\"Preco\"] || \"0\";\nconst precoItem = parseFloat(String(precoRaw).replace(',', '.'));\n\n// 4. Cálculo matemático\nconst troco = valorPago - precoItem;\n\nreturn {\n  resumo_financeiro: {\n    item: sheetsData.Item || \"Produto\",\n    preco: precoItem,\n    pago: valorPago,\n    troco: troco > 0 ? troco : 0,\n    precisa_troco: valorPago > precoItem,\n    status: (Object.keys(sheetsData).length === 0) ? \"Aviso: Dados da planilha não encontrados no nó Code\" : \"OK\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1152,
+        176
+      ],
+      "id": "19f0b48b-97b7-465c-925a-910ef4e34a0b",
+      "name": "Calculo de preço"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst cardapioFormatado = items.map(item => {\n  // O || '' garante que se o campo estiver vazio, o código não quebra\n  const nome = item.json.Item || 'Prato';\n  const preco = item.json.Preço || '---';\n  const tamanho = item.json.Tamanho || ''; \n\n  let linhaTamanho = tamanho ? `\\n└ 📏 Tamanho: ${tamanho}` : '';\n  \n  return `🍴 *${nome}*\\n└ 💰 Valor: R$ ${preco}${linhaTamanho}\\n`;\n}).join('\\n');\n\nreturn { cardapio: `🌟 *CARDÁPIO DO DIA* 🌟\\n\\n${cardapioFormatado}` };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        176
+      ],
+      "id": "678edab3-f72f-4302-b821-829e44f4ad43",
+      "name": "Organiza pedidos"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "filtra GRUPOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "condicional numero real",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DADOS": {
+      "main": [
+        [
+          {
+            "node": "API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Organiza pedidos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filtra GRUPOS": {
+      "main": [
+        [
+          {
+            "node": "filtro de Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filtro de Audio": {
+      "main": [
+        [
+          {
+            "node": "Mensagem de audio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DADOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Cloud Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "aguarde 2 sec.": {
+      "main": [
+        [
+          {
+            "node": "limpa numero",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "condicional numero real": {
+      "main": [
+        [
+          {
+            "node": "aguarde 2 sec.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "limpa numero": {
+      "main": [
+        [
+          {
+            "node": "Envio de mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculo de preço": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Organiza pedidos": {
+      "main": [
+        [
+          {
+            "node": "Calculo de preço",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "7a35d07f-d8a4-44b0-995c-2d4fec6ea2ca",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e9298ce75adee82b4f0677dfec3de13c331b1df51bf53c06570aa2eec941d545"
+  },
+  "id": "IcCWb0zU6qSKPXKr",
+  "tags": []
+}
