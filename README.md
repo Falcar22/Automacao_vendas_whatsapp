@@ -13,3 +13,10 @@ Gestão de agendamentos e horários de funcionamento dinâmicos.
 Triagem de pedidos e integração com logística de entrega.
 
 Scripting personalizado em JavaScript para tratamento de dados complexos.
+Upgrade de Estabilidade e Controle de Fluxo (n8n + Evolution API)
+
+Implementação de Filtro de Caducidade: Adicionado nó de código JavaScript para ignorar mensagens recebidas há mais de 60 segundos (evitando disparos em massa após reinicialização do sistema).
+
+Lógica Anti-Loop (Self-Reply): Filtragem de mensagens enviadas pela própria instância (fromMe: true) para evitar loops infinitos de IA.
+
+Redundância de LLM: Migração temporária do Mistral para Groq para contornar erros de Rate Limit (429) e garantir baixa latência.
